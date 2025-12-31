@@ -31,7 +31,7 @@ pip install poetry
 Clone the project to a destination of your liking:
 
 ```bash
-git clone ...
+git clone 
 ```
 
 Now, switch into the directory and install the dependencies it with poetry:
@@ -52,7 +52,7 @@ poetry run python workout-tracker.py
 Clone the project to a destination of your liking:
 
 ```bash
-git clone ...
+git clone https://github.com/tilhammer/Workout-Tracker.git
 ```
 
 Now, switch into the directory and install the requirements. It is recommended to use conda or a similar python installation manager:
@@ -97,7 +97,3 @@ If you need help with the installation, feel free to reach out to me or create a
 You are always allowed to edit the code and make changes to the program. If you would like to contribute to the project, either create a fork or contact me.
 
 Feature suggestions are always welcome, but there is no guarantee for implementation as I might be busy. You are always free to implement them by yourself.
-
-
-
-
