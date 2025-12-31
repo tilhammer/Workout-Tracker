@@ -31,7 +31,7 @@ pip install poetry
 Clone the project to a destination of your liking:
 
 ```bash
-git clone 
+git clone https://github.com/tilhammer/Workout-Tracker.git
 ```
 
 Now, switch into the directory and install the dependencies it with poetry:
