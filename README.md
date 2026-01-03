@@ -4,11 +4,11 @@
 
 This program is a simple python tool to help me get rid of the hustle around tracking my training sessions. You can easily enter information through the CLI (Command Line Interface) and it will be saved in a TinyDB database ready for analysis.
 
-Once you tracked your exercise, you can create a detailed analysis to understand your own habits better*.
+Once you tracked your exercise, you can create a detailed analysis to understand your own habits better\*.
 
 None of your data will be shared and there is no internet connection required for usage, it is how ever neccessary during the installation process.
 
-*Future feature, see [Roadmap](#roadmap)
+\*Future feature, see [Roadmap](#roadmap)
 
 ## Installation and Running (Only tested on Linux)
 
@@ -88,7 +88,7 @@ It is further recommended to create a simple script for running the project, esp
 
 - [ ] Adding custom diagrams
 - [ ] Adding comparison of different timeframes and exercise-categories
-- [ ] Adding custom types of exercise
+- [x] Adding custom types of exercise
 
 ## Help
 
