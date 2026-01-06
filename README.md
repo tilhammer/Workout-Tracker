@@ -79,16 +79,20 @@ It is further recommended to create a simple script for running the project, esp
 ### Definitely coming
 
 - [x] Creating tracking functionality with the CLI
-- [ ] Commenting code for easier understanding and improvement
-- [ ] Adding basic analysing functionality with CLI
+- [x] Adding custom types of exercise
+- [x] Removing workouts afterwards
+- [x] Adding functionality to analyse specific timeframes
+- [ ] Adding basic analysing functionality with CLI (partially done)
+- [ ] Adding diagram analysation
 - [ ] Adding export functionality for statistics and diagrams
-- [ ] Adding functionality to analyse specific timeframes
+- [ ] Commenting code for easier understanding and improvement
 
 ### Depending on my mood and the community
 
+- [ ] Writing tests
+- [ ] Adding recurring and customised time intervals for analysis
 - [ ] Adding custom diagrams
 - [ ] Adding comparison of different timeframes and exercise-categories
-- [x] Adding custom types of exercise
 
 ## Help
 

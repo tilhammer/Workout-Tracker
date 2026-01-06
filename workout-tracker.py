@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timedelta
 import math
 from collections import Counter
+import calendar
 
 
 db = TinyDB('data/training_db.json')
@@ -47,6 +48,7 @@ def add_training_to_db(
     training_type,
     duration_min,
     difficulty,
+    fun,
     volume_type,
     volume_value,
     notes=None
@@ -59,6 +61,7 @@ def add_training_to_db(
     'training_type': training_type,
     'duration_min': duration_min,
     'difficulty': difficulty,
+    'fun': fun,
     'volume': {
         'type': volume_type,
         'value': volume_value
@@ -78,6 +81,43 @@ def count_days(start_date, end_date, day):
         current += timedelta(days=1)
 
     return count
+
+
+def is_date_valid(d):
+    try:
+        _d = datetime.strptime(d, '%Y-%m-%d')
+        if _d <= datetime.today():
+            return True
+        else:
+            return False
+    except ValueError:
+            return False
+
+
+def is_month_valid(m):
+    try:
+        _m = datetime.strptime(m, '%Y-%m')
+        now = datetime.now()
+        current_month = datetime(year=now.year, month=now.month, day=1)
+        if _m <= current_month:
+            return True
+        else:
+            return False
+    except ValueError:
+            return False
+
+
+def is_year_valid(y):
+    try:
+        _y = datetime.strptime(y, '%Y')
+        now = datetime.now()
+        current_year = datetime(year=now.year, month=1, day=1)
+        if _y <= current_year:
+            return True
+        else:
+            return False
+    except ValueError:
+            return False
 
 
 def get_general_metrics(entries, start_date, end_date, time_interval_length):
@@ -102,7 +142,6 @@ def get_general_metrics(entries, start_date, end_date, time_interval_length):
     print('\n' + 'Here are some stats about your weeks.')
     for i in range(0, 7):
         print(f'{weekday_list[i]}: You worked out on {round(average_sessions_weekdays[i] * 100)}% of days, your favourite workout style was {most_common_exercise_weekdays[i] if isinstance(most_common_exercise_weekdays[i], str) else most_common_exercise_weekdays[i][0] if isinstance(most_common_exercise_weekdays[i], list) else 'none'}.')
-    print(space_filler)
     # Durchschnittszeit, Zeit pro Woche
 
 
@@ -110,11 +149,11 @@ def input_validation(input_type, extra_argument = None):
     arg = None
     while arg == None:
         if input_type == 'dialogue.action':
-            print('\n' + 'What would you like to run?' + '\n' + '\t[1] Track workout' + '\n' + '\t[2] Show statistics' + '\n' + '\t[3] Edit disciplines' + '\n' + '\t[4] / [Q] Quit')
+            print('\n' + 'What would you like to run?' + '\n' + '\t[1] Track workout' + '\n' + '\t[2] Remove Workout' + '\n' + '\t[3] Show statistics' + '\n' + '\t[4] Edit disciplines' + '\n' + '\t[5] / [Q] Quit')
             _arg = input('\tAction: ')
             if _arg in ['quit', 'Quit']:
                 quit_app()
-            if _arg in [str(1), str(3), str(4), 'Q', 'q']:
+            if _arg in [str(1), str(3), str(4), str(5), 'Q', 'q']:
                 arg = _arg
             elif _arg in str(2) and db.all() != []:
                 arg = _arg
@@ -133,7 +172,7 @@ def input_validation(input_type, extra_argument = None):
             else:
                 try:
                     _a = datetime.strptime(_arg, '%Y-%m-%d')
-                    if _a <= datetime.today():
+                    if is_date_valid(_arg):
                         arg = _arg
                     else:
                         print('Invalid choice!')
@@ -171,8 +210,22 @@ def input_validation(input_type, extra_argument = None):
                 print('Invalid choice!')
 
         elif input_type == 'track_workout.difficulty':
-            print('\n' + 'Enter your perceived difficulty of the training on a scale from 1 to 10 (1 = Easy, 10 = Hard).')
+            print('\n' + 'Enter your perceived difficulty of the training on a scale from 1 to 10 (1 = Easy, 10 = Very hard).')
             _arg = input('\tDifficulty: ')
+            if _arg in ['quit', 'Quit']:
+                quit_app()
+            try:
+                _a = float(_arg)
+                if 1 <= _a <= 10:
+                    arg = _a
+                else:
+                    print('Invalid choice!')
+            except ValueError:
+                print('Invalid choice!')
+
+        elif input_type == 'track_workout.fun':
+            print('\n' + 'Estimate the fun you had during the training on a scale from 1 to 10 (1 = Sucks, 10 = Super fun).')
+            _arg = input('\tFun: ')
             if _arg in ['quit', 'Quit']:
                 quit_app()
             try:
@@ -220,17 +273,37 @@ def input_validation(input_type, extra_argument = None):
             arg = _arg
 
         elif input_type == 'analyse_workouts.time_choice':
-            print('\n' + 'Please choose what time you want to analyse.' + '\n' + '\t[1] From the first to the latest entry' + '\n' + '\t[2] From the first entry to today' + '\n' + '\t[3] Specific month' + '\n' + '\t[4] Specific year' + '\n' + '\t[5] Custom time interval')
+            print('\n' + 'Please choose what time you want to analyse.' + '\n' + '\t[1] From the first to the latest entry' + '\n' + '\t[2] From the first entry to today' + '\n' + '\t[3] Specific month' + '\n' + '\t[4] Specific year' + '\n' + '\t[5] Current year until now' + '\n' + '\t[6] Custom time interval')
             _arg = input('\tChoice: ')
             if _arg in ['quit', 'Quit']:
                 quit_app()
             try:
                 _a = int(_arg)
-                if 1 <= _a <= 5:
+                if 1 <= _a <= 6:
                     arg = _a
                 else:
                     print('Invalid choice!')
             except ValueError:
+                print('Invalid choice!')
+
+        elif input_type == 'analyse_workouts.month_choice':
+            print('\n' + 'Please enter the month in question in the following format: YYYY-MM')
+            _arg = input('\tMonth: ').strip()
+            if _arg in ['quit', 'Quit']:
+                quit_app()
+            if is_month_valid(_arg):
+                arg = datetime.strptime(_arg, '%Y-%m')
+            else:
+                print('Invalid choice!')
+
+        elif input_type == 'analyse_workouts.year_choice':
+            print('\n' + 'Please enter the year in question in the following format: YYYY')
+            _arg = input('\tYear: ').strip()
+            if _arg in ['quit', 'Quit']:
+                quit_app()
+            if is_year_valid(_arg):
+                arg = _arg
+            else:
                 print('Invalid choice!')
 
         elif input_type == 'analyse_workouts.metrics_choice':
@@ -248,12 +321,14 @@ def input_validation(input_type, extra_argument = None):
                 print('Invalid choice!')
 
         elif input_type == 'custom_disciplines.disciplines':
-            print('\n' + 'Please enter the disciplines you would like to add below.' + '\n' + 'They must not be similar to existing disciplines.' + '\n' + 'To add multiple at once, put a space between them. Discipline names must not contain spaces.' + '\n' + 'If you would like to remove any of the existing disciplines, write /<discipline-name>' + '\n' + 'To completely reset your disciplines, simply type "RESET". This has to be the only input and be capitalised to work, otherwise will you create a new discipline called "Reset".' + '\n' + 'To go back, type "BACK", same as with "RESET".')
+            print('\n' + 'Please enter the disciplines you would like to add below.' + '\n' + 'They must not be similar to existing disciplines.' + '\n' + 'To add multiple at once, put a space between them. Discipline names must not contain spaces or underscores.' + '\n' + 'If you would like to remove any of the existing disciplines, write /<discipline-name>' + '\n' + 'To completely reset your disciplines, simply type "RESET". This has to be the only input and be capitalised to work, otherwise will you create a new discipline called "Reset".' + '\n' + 'To go back, type "BACK", same as with "RESET".')
             _arg = input('\tDisciplines: ')
             if _arg in ['quit', 'Quit']:
                 quit_app()
-            elif _arg == []:
+            elif _arg == '':
                 print('Please enter disciplines as described above or quit.')
+            elif '_' in _arg:
+                print('Please do not use underscores in discipline names.')
             elif _arg == 'RESET':
                 customisation_data.update({
                     'training_types': ['Jogging', 'Bicycle', 'Push', 'Pull', 'Legs', 'Core', 'Other'],
@@ -295,6 +370,37 @@ def input_validation(input_type, extra_argument = None):
             except ValueError:
                 print('Invalid choice!')
 
+        elif input_type == 'remove_workout.id':
+            print('\n' + 'Please enter the ID to remove. Or name a date to search; type "TODAY" for the date of today.' + '\n' + 'IDs have the following form: <DATE (YYYY-MM-DD)>_<DISCIPLINE NAME>_<TWO-CHARACTER NUMBER OF THE SESSION FOR THE DAY OF INTEREST>; for example: 2025-12-30_Pull_01')
+            _arg = input('\tChoice: ')
+            if _arg in ['quit', 'Quit']:
+                quit_app()
+            elif _arg == 'TODAY':
+                _arg = datetime.today().strftime('%Y-%m-%d')
+            try:
+                _a = datetime.strptime(_arg, '%Y-%m-%d')
+                if _a <= datetime.today():
+                        dates = {
+                            (_a - timedelta(days=1)).strftime("%Y-%m-%d"),
+                            _a.strftime("%Y-%m-%d"),
+                            (_a + timedelta(days=1)).strftime("%Y-%m-%d"),
+                            }
+                        sessions = db.search(Query().date.one_of(dates))
+                        if sessions == []:
+                            print('\n' + 'No sessions were found on this date ±1 day.')
+                        else:
+                            print('\n' + 'The following sessions were found:')
+                            for s in sessions:
+                                print(f'\t{s['display_id']}')
+                else:
+                    print('Invalid choice!')
+            except ValueError:
+                _a = _arg.split('_')
+                if len(_a) == 3 and is_date_valid(_a[0]) and _a[1] in customisation_data.all()[0]['training_types'] and len(db.search(Query().display_id == _arg)) == 1:
+                    arg = _arg
+                else:
+                    print('Invalid input!')
+
         else:
             print('\n' + 'There was a problem validating your input.' + '\n' + 'Please make sure you did not change any keywords for input identification.' + '\n' + 'If the problem persist, please contact the dev.')        
     return arg
@@ -304,14 +410,17 @@ def dialogue():
     print('\n' + 'Welcome! To quit, you can always type "Quit" or press CTL + C.')
     while True:
         choice = input_validation('dialogue.action')
-        print(space_filler)
+        if choice not in ['5', 'Q', 'q']:
+            print(space_filler)
         if choice == '1':
             track_workout()
         elif choice == '2':
-            analyse_workouts()
+            remove_workout()
         elif choice == '3':
+            analyse_workouts()
+        elif choice == '4':
             custom_disciplines()
-        elif choice in ['4', 'Q', 'q']:
+        elif choice in ['5', 'Q', 'q']:
             quit_app()
         else:
             print('\n' + 'There was a problem validating your input.' + '\n' + 'Please make sure you did not change any keywords for input identification.' + '\n' + 'If the problem persist, please contact the dev.')                
@@ -323,11 +432,19 @@ def track_workout():
     training_type = input_validation('track_workout.training_type')
     duration_min = input_validation('track_workout.duration')
     difficulty = input_validation('track_workout.difficulty')
+    fun = input_validation('track_workout.fun')
     volume_type = 'distance' if training_type in customisation_data.all()[0]['distance_training'] else 'sets' if training_type in customisation_data.all()[0]['sets_training'] else None
     volume_value = input_validation('track_workout.distance') if volume_type == 'distance' else input_validation('track_workout.sets') if volume_type == 'sets' else None
     notes = input_validation('track_workout.notes')
-    add_training_to_db(date=date, training_type=training_type, duration_min=duration_min, difficulty=difficulty, volume_type=volume_type, volume_value=volume_value, notes=notes)
+    add_training_to_db(date=date, training_type=training_type, duration_min=duration_min, difficulty=difficulty, fun=fun, volume_type=volume_type, volume_value=volume_value, notes=notes)
     print('\n' + 'Successfully tracked the training session.')
+    print(space_filler)
+
+
+def remove_workout():
+    id = input_validation('remove_workout.id')
+    db.remove(Query().display_id == id)
+    print('\n' + 'Successfully removed the session.')
     print(space_filler)
 
 
@@ -349,12 +466,20 @@ def analyse_workouts():
             )['date']
         end_date = datetime.today().strftime('%Y-%m-%d')
     elif time_choice == 3:
-        # Month in general (like all Januaries) or specific month (like January 2026)?
-        print('Coming soon.')
+        month = input_validation('analyse_workouts.month_choice')
+        start_date = month.strftime("%Y-%m-01")
+        end_date = f"{month.year}-{month.month:02d}-{calendar.monthrange(month.year, month.month)[1]:02d}"
     elif time_choice == 4:
-        print('Coming soon.')
+        year = input_validation('analyse_workouts.year_choice')
+        start_date = f"{year}-01-01"
+        end_date = f"{year}-12-31"
     elif time_choice == 5:
+        start_date = f'{datetime.today().year}-01-01'
+        end_date = datetime.today().strftime('%Y-%m-%d')
+    elif time_choice == 6:
         print('Coming soon.')
+    else:
+        print('\n' + 'There was a problem validating your input.' + '\n' + 'Please make sure you did not change any keywords for input identification.' + '\n' + 'If the problem persist, please contact the dev.')                
     entries = db.search(
     (Query().date >= start_date) &
     (Query().date <= end_date)
@@ -365,6 +490,7 @@ def analyse_workouts():
         get_general_metrics(entries=entries, start_date=start_date, end_date=end_date, time_interval_length=time_interval_length)
     elif metrics_choice == 2:
         print('\n' + 'Coming soon.')
+    print(space_filler)
 
 
 def custom_disciplines():
@@ -399,9 +525,11 @@ def custom_disciplines():
             print('\n' + 'Successfully removed discipline(s).')
         customisation_data.update({'distance_training': _distance_training})
         customisation_data.update({'sets_training': _sets_training}) 
+    print(space_filler)
 
 
 def quit_app():
+    print(space_filler)
     print('\n' + 'Bye! See you next time and take care.' + '\n')
     quit()
 
