@@ -82,7 +82,7 @@ It is further recommended to create a simple script for running the project, esp
 - [x] Adding custom types of exercise
 - [x] Removing workouts afterwards
 - [x] Adding functionality to analyse specific timeframes
-- [ ] Adding basic analysing functionality with CLI (partially done)
+- [x] Adding basic analysing functionality with CLI (most stats done)
 - [ ] Adding diagram analysation
 - [ ] Adding export functionality for statistics and diagrams
 - [ ] Commenting code for easier understanding and improvement

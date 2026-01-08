@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import math
 from collections import Counter
 import calendar
+import shutil
 
 
 db = TinyDB('data/training_db.json')
@@ -97,8 +98,8 @@ def is_date_valid(d):
 def is_month_valid(m):
     try:
         _m = datetime.strptime(m, '%Y-%m')
-        now = datetime.now()
-        current_month = datetime(year=now.year, month=now.month, day=1)
+        today = datetime.today()
+        current_month = datetime(year=today.year, month=today.month, day=1)
         if _m <= current_month:
             return True
         else:
@@ -110,8 +111,8 @@ def is_month_valid(m):
 def is_year_valid(y):
     try:
         _y = datetime.strptime(y, '%Y')
-        now = datetime.now()
-        current_year = datetime(year=now.year, month=1, day=1)
+        today = datetime.today()
+        current_year = datetime(year=today.year, month=1, day=1)
         if _y <= current_year:
             return True
         else:
@@ -120,13 +121,50 @@ def is_year_valid(y):
             return False
 
 
+def get_average_value(entries, t):
+    c = 0
+    if len(entries) > 0:
+        for e in entries:
+            if t == 'volume':
+                c += e['volume']['value']
+            else:
+                c += e[t]
+        c = c / len(entries)
+    return round(c, 1)
+    
+
+
+def print_with_auto_tab(text):
+    c = 0
+    terminal_width = shutil.get_terminal_size().columns
+    tab_width = 20
+    line_length = terminal_width - tab_width
+    while len(text) > line_length:
+        break_index = text.rfind(' ', 0, line_length)        
+        if break_index == -1:
+            break_index = line_length
+        if c == 0:
+            print('\t' + text[:break_index].rstrip())
+            c += 1
+        else:
+            print('\t\t' + text[:break_index].rstrip())
+        text = text[break_index:].lstrip()
+    if text:
+        if c == 0:
+            print('\t' + text)
+        else:
+            print('\t\t' + text)
+
+
 def get_general_metrics(entries, start_date, end_date, time_interval_length):
     print(space_filler)
     print('\n' + f'Here are the metrics from {start_date} to {end_date}, covering a {time_interval_length} days, equal to {round(time_interval_length / 7, 1)} weeks.')
+    
     average_sessions_per_day = len(entries) / time_interval_length
     average_sessions_per_week = (len(entries) / time_interval_length) * 7
     average_sessions_per_month = (len(entries) / time_interval_length) * 30.4
     average_sessions_per_year = (len(entries) / time_interval_length) * 365.24
+    
     entries_weekdays = [[e for e in entries if e['weekday'] == i] for i in range(1, 8)]
     average_sessions_weekdays = [len(entries_weekdays[i]) / count_days(start_date=datetime.strptime(start_date, '%Y-%m-%d'), end_date=datetime.strptime(end_date, '%Y-%m-%d'), day=i)
                                  if count_days(start_date=datetime.strptime(start_date, '%Y-%m-%d'), end_date=datetime.strptime(end_date, '%Y-%m-%d'), day=i) > 0 
@@ -137,13 +175,40 @@ def get_general_metrics(entries, start_date, end_date, time_interval_length):
         if day else None
         for day in entries_weekdays
         ]
+    average_duration_weekdays = [get_average_value(entries_weekdays[i], 'duration_min') for i in range(0, 7)]
+    average_fun_weekdays = [get_average_value(entries_weekdays[i], 'fun') for i in range(0, 7)]
+    average_difficulty_weekdays = [get_average_value(entries_weekdays[i], 'difficulty') for i in range(0, 7)]
     weekday_list = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    
+    disciplines = customisation_data.all()[0]['training_types']
+    distance_training = customisation_data.all()[0]['distance_training']
+    sets_training = customisation_data.all()[0]['sets_training']
+    entries_disciplines = [[e for e in entries if e['training_type'] == disciplines[i]] for i in range(0, len(disciplines))]
+    entries_unknown_disciplines = [e for e in entries if e['training_type'] not in disciplines]
+    average_sessions_per_week_disciplines = [(len(entries_disciplines[i]) / time_interval_length) * 7 for i in range(0, len(disciplines))]
+    average_duration_disciplines = [get_average_value(entries_disciplines[i], 'duration_min') for i in range(0, len(disciplines))]
+    average_fun_disciplines = [get_average_value(entries_disciplines[i], 'fun') for i in range(0, len(disciplines))]
+    average_difficulty_disciplines = [get_average_value(entries_disciplines[i], 'difficulty') for i in range(0, len(disciplines))]
+    average_volume_amount_disciplines = [get_average_value(entries_disciplines[i], 'volume')
+                                        if disciplines[i] in distance_training or disciplines[i] in sets_training
+                                        else 0
+                                        for i in range(0, len(disciplines))]
+    print(average_volume_amount_disciplines)
+
+    entries_distance = [e for e in entries if e['training_type'] in distance_training]
+    entries_sets = [e for e in entries if e['training_type'] in sets_training]
+    average_sessions_per_week_distance = (len(entries_distance) / time_interval_length) * 7
+    average_sessions_per_week_sets = (len(entries_sets) / time_interval_length) * 7
+    
     print('\n' + f'You worked out on {round(average_sessions_per_day * 100)}% of days.' + '\n' + f'Your average amount of training sessions are {round(average_sessions_per_week, 1)} per week, equal to {round(average_sessions_per_month, 1)} per month and {round(average_sessions_per_year, 1)} per year.')
     print('\n' + 'Here are some stats about your weeks.')
     for i in range(0, 7):
-        print(f'{weekday_list[i]}: You worked out on {round(average_sessions_weekdays[i] * 100)}% of days, your favourite workout style was {most_common_exercise_weekdays[i] if isinstance(most_common_exercise_weekdays[i], str) else most_common_exercise_weekdays[i][0] if isinstance(most_common_exercise_weekdays[i], list) else 'none'}.')
-    # Durchschnittszeit, Zeit pro Woche
-
+        print_with_auto_tab(f'{weekday_list[i]}: You worked out on {round(average_sessions_weekdays[i] * 100)}% of days, equalling {len(entries_weekdays[i])} sessions for {round(average_duration_weekdays[i], 1)} minutes each on average; your favourite workout style was {most_common_exercise_weekdays[i] if isinstance(most_common_exercise_weekdays[i], str) else most_common_exercise_weekdays[i][0] if isinstance(most_common_exercise_weekdays[i], list) else 'none'}. On this weekday, you rated the training with {round(average_difficulty_weekdays[i], 1)}/10 in terms of difficulty and {round(average_fun_weekdays[i], 1)}/10 in terms of fun.')
+    print('\n' + 'Here are some stats about your disciplines.')
+    print(f'There were {len(entries_unknown_disciplines)} unidentified training sessions in the selected time interval, which means their disciplines cannot be found in your list anymore.')
+    for i in range(0, len(disciplines)):
+        print_with_auto_tab(f'{disciplines[i]}: You did this training for {len(entries_disciplines[i])} times in the selected period. On average you worked out {round(average_sessions_per_week_disciplines[i], 1)} times per week for {round(average_duration_disciplines[i], 1)} minutes per session. {f'Every session you covered a distance of {average_volume_amount_disciplines[i]}km, which adds up to a total of {average_volume_amount_disciplines[i] * len(entries_disciplines[i])}km. ' if disciplines[i] in distance_training else f'Every session you did {average_volume_amount_disciplines[i]} sets, which adds up to a total of {average_volume_amount_disciplines[i] * len(entries_disciplines[i])} sets for all of your sessions combined. ' if disciplines[i] in sets_training else ''}You rated the difficulty to be {round(average_difficulty_disciplines[i], 1)}/10 and the fun to be {round(average_fun_disciplines[i], 1)}/10.')
+    print('\n' + f'For distance-type training, this results in an average of {round(average_sessions_per_week_distance, 1)} sessions per week and for sets-type training in {round(average_sessions_per_week_sets, 1)} sessions.')
 
 def input_validation(input_type, extra_argument = None):
     arg = None
@@ -321,7 +386,7 @@ def input_validation(input_type, extra_argument = None):
                 print('Invalid choice!')
 
         elif input_type == 'custom_disciplines.disciplines':
-            print('\n' + 'Please enter the disciplines you would like to add below.' + '\n' + 'They must not be similar to existing disciplines.' + '\n' + 'To add multiple at once, put a space between them. Discipline names must not contain spaces or underscores.' + '\n' + 'If you would like to remove any of the existing disciplines, write /<discipline-name>' + '\n' + 'To completely reset your disciplines, simply type "RESET". This has to be the only input and be capitalised to work, otherwise will you create a new discipline called "Reset".' + '\n' + 'To go back, type "BACK", same as with "RESET".')
+            print('\n' + 'Please enter the disciplines you would like to add.' + '\n' + 'They must not be similar to existing disciplines.' + '\n' + 'To add multiple at once, put a space between them. Discipline names must not contain spaces or underscores.' + '\n' + 'If you would like to remove any of the existing disciplines, write /<discipline-name>' + '\n' + 'To completely reset your disciplines, simply type "RESET". This has to be the only input and be capitalised to work, otherwise will you create a new discipline called "Reset".' + '\n' + 'To go back, type "BACK", same as with "RESET".')
             _arg = input('\tDisciplines: ')
             if _arg in ['quit', 'Quit']:
                 quit_app()
@@ -381,9 +446,9 @@ def input_validation(input_type, extra_argument = None):
                 _a = datetime.strptime(_arg, '%Y-%m-%d')
                 if _a <= datetime.today():
                         dates = {
-                            (_a - timedelta(days=1)).strftime("%Y-%m-%d"),
-                            _a.strftime("%Y-%m-%d"),
-                            (_a + timedelta(days=1)).strftime("%Y-%m-%d"),
+                            (_a - timedelta(days=1)).strftime('%Y-%m-%d'),
+                            _a.strftime('%Y-%m-%d'),
+                            (_a + timedelta(days=1)).strftime('%Y-%m-%d'),
                             }
                         sessions = db.search(Query().date.one_of(dates))
                         if sessions == []:
@@ -467,12 +532,12 @@ def analyse_workouts():
         end_date = datetime.today().strftime('%Y-%m-%d')
     elif time_choice == 3:
         month = input_validation('analyse_workouts.month_choice')
-        start_date = month.strftime("%Y-%m-01")
-        end_date = f"{month.year}-{month.month:02d}-{calendar.monthrange(month.year, month.month)[1]:02d}"
+        start_date = month.strftime('%Y-%m-01')
+        end_date = f'{month.year}-{month.month:02d}-{calendar.monthrange(month.year, month.month)[1]:02d}'
     elif time_choice == 4:
         year = input_validation('analyse_workouts.year_choice')
-        start_date = f"{year}-01-01"
-        end_date = f"{year}-12-31"
+        start_date = f'{year}-01-01'
+        end_date = f'{year}-12-31'
     elif time_choice == 5:
         start_date = f'{datetime.today().year}-01-01'
         end_date = datetime.today().strftime('%Y-%m-%d')
@@ -496,7 +561,7 @@ def analyse_workouts():
 def custom_disciplines():
     print('\n' + 'Current disciplines:')
     for i in range(0, len(customisation_data.all()[0]['training_types'])):
-        print(f'\t{i + 1}. {customisation_data.all()[0]['training_types'][i]}')
+        print_with_auto_tab(f'{i + 1}. {customisation_data.all()[0]['training_types'][i]}')
     disciplines = input_validation('custom_disciplines.disciplines')
     if disciplines not in ['RESET', 'BACK']:
         _training_types = customisation_data.all()[0]['training_types']
