@@ -5,12 +5,24 @@ import math
 from collections import Counter
 import calendar
 import shutil
+import sys
+from pathlib import Path
 
+def get_base_dir() -> Path:
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
 
-db = TinyDB('data/training_db.json')
+    return Path(__file__).resolve().parent
 
+base_dir = get_base_dir()
 
-customisation_data = TinyDB('data/customisation_db.json')
+data_dir = base_dir / 'data'
+
+data_dir.mkdir(exist_ok=True)
+
+db = TinyDB(data_dir / 'training_db.json')
+
+customisation_data = TinyDB(data_dir / 'customisation_db.json')
 
 
 if customisation_data.all() == []:
@@ -133,7 +145,6 @@ def get_average_value(entries, t):
     return round(c, 1)
     
 
-
 def print_with_auto_tab(text):
     c = 0
     terminal_width = shutil.get_terminal_size().columns
@@ -209,6 +220,7 @@ def get_general_metrics(entries, start_date, end_date, time_interval_length):
     for i in range(0, len(disciplines)):
         print_with_auto_tab(f'{disciplines[i]}: You did this training for {len(entries_disciplines[i])} times in the selected period. On average you worked out {round(average_sessions_per_week_disciplines[i], 1)} times per week for {round(average_duration_disciplines[i], 1)} minutes per session. {f'Every session you covered a distance of {average_volume_amount_disciplines[i]}km, which adds up to a total of {average_volume_amount_disciplines[i] * len(entries_disciplines[i])}km. ' if disciplines[i] in distance_training else f'Every session you did {average_volume_amount_disciplines[i]} sets, which adds up to a total of {average_volume_amount_disciplines[i] * len(entries_disciplines[i])} sets for all of your sessions combined. ' if disciplines[i] in sets_training else ''}You rated the difficulty to be {round(average_difficulty_disciplines[i], 1)}/10 and the fun to be {round(average_fun_disciplines[i], 1)}/10.')
     print('\n' + f'For distance-type training, this results in an average of {round(average_sessions_per_week_distance, 1)} sessions per week and for sets-type training in {round(average_sessions_per_week_sets, 1)} sessions.')
+
 
 def input_validation(input_type, extra_argument = None):
     arg = None
@@ -596,7 +608,7 @@ def custom_disciplines():
 def quit_app():
     print(space_filler)
     print('\n' + 'Bye! See you next time and take care.' + '\n')
-    quit()
+    sys.exit()
 
 
 dialogue()

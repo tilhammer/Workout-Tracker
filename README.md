@@ -68,7 +68,7 @@ To run, type:
 python workout-tracker.py
 ```
 
-If the installation or running fails, check `python --version` and `pip --version`. You might have `python3` and `pip3` installed, especially under Linux. In that case substitute all `python` and `pip` commands with`python3` and `pip3`.
+If the installation or running fails, check `python --version` and `pip --version`. You might have `python3` and `pip3` installed, especially under Linux. In that case substitute `python3` and `pip3` for all `python` and `pip` commands.
 
 If this still doesn't work using Method B, please check if the `requirements.txt` file located at the head of the project is up to date with the `project.dependencies` in the `pyproject.toml` file. I have to manually generate the `requirements.txt` file, so there could be mistakes. Contact me in that case or open an issue please and try using Option A to ensure the poetry install works.
 
@@ -81,7 +81,7 @@ It is further recommended to create a simple script for running the project, esp
 - [x] Creating tracking functionality with the CLI
 - [x] Adding custom types of exercise
 - [x] Removing workouts afterwards
-- [x] Adding functionality to analyse specific timeframes
+- [x] Adding functionality to analyse specific time intervals (custom intervals still missing)
 - [x] Adding basic analysing functionality with CLI (most stats done)
 - [ ] Adding diagram analysation
 - [ ] Adding export functionality for statistics and diagrams

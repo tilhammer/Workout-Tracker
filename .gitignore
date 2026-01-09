@@ -1,3 +1,7 @@
 /data/training_db.json
 /data/customisation_db.json
 try.py
+/dist
+data
+build/
+workout-tracker.spec
