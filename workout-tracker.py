@@ -204,7 +204,6 @@ def get_general_metrics(entries, start_date, end_date, time_interval_length):
                                         if disciplines[i] in distance_training or disciplines[i] in sets_training
                                         else 0
                                         for i in range(0, len(disciplines))]
-    print(average_volume_amount_disciplines)
 
     entries_distance = [e for e in entries if e['training_type'] in distance_training]
     entries_sets = [e for e in entries if e['training_type'] in sets_training]

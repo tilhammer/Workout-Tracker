@@ -10,7 +10,12 @@ None of your data will be shared and there is no internet connection required fo
 
 \*Future feature, see [Roadmap](#roadmap)
 
-## Installation and Running (Only tested on Linux)
+## Quickstart
+
+Download one of the [executables](https://github.com/tilhammer/Workout-Tracker/releases) from the assets of a release suiting your system.
+Follow the release notes' instructions.
+
+## Installation and Running
 
 ### Prerequisites
 
@@ -93,6 +98,12 @@ It is further recommended to create a simple script for running the project, esp
 - [ ] Adding recurring and customised time intervals for analysis
 - [ ] Adding custom diagrams
 - [ ] Adding comparison of different timeframes and exercise-categories
+
+## Removing the project
+
+If you have downloaded an executable, simply delete it combined with the `data` folder next to it.
+If you used python to run the project, delete the cloned project folder to get rid of all data.
+That's it!
 
 ## Help
 
